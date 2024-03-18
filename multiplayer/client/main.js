@@ -66,7 +66,7 @@ socket.onmessage = (event) => {
         document.getElementById("json").innerHTML = JSON.stringify(server_data,null,4);
     }
     else if (JSON.parse(event.data).type == "ping"){
-        console.log(Date.now() - JSON.parse(event.data).data.message)
+        console.log("ping : " + (Date.now() - JSON.parse(event.data).data.message).toString())
     }
 };
 document.addEventListener('keydown', function(event) {
