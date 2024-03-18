@@ -33,21 +33,25 @@ const map = [1,1,1,1,1,1,1,1,
 //multiplayer shit
 const id = Math.floor(Math.random() * 10000)
 let ready = false
-let data = {
+let player_data = {
     id,
     px,
     py,
     pa
 }
-const socket = new WebSocket("ws:localhost:3000", "protocolOne")
+let server_data = {
+}
+const socket = new WebSocket("ws:172.232.172.168:3000", "protocolOne")
 
 socket.onopen = (event) => {
-    socket.send( JSON.stringify(data));
+    socket.send( JSON.stringify(player_data));
     ready = true
   };
   
 socket.onmessage = (event) => {
-    console.log(JSON.parse(event.data));
+    server_data = JSON.parse(event.data)
+    //console.log(obj);
+
 };
 document.addEventListener('keydown', function(event) {
     if(event.keyCode == 65) {
@@ -109,8 +113,19 @@ function process_input(){
 }
 
 function drawPlayer(){
-    ctx.fillStyle = "rgba(255,0,0,1)";
-    ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
+    //ctx.fillStyle = "rgba(255,0,0,1)";
+    //ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
+    
+    obj = server_data
+    for(var key in obj){
+        if (obj.hasOwnProperty(key)) {
+            var val = obj[key];
+            
+            ctx.fillStyle = ("rgba(255,0,0,1)")
+            ctx.fillRect((val.px*minimap_scale)-4,(val.py*minimap_scale)-4,8,8)
+            console.log((px-4)*minimap_scale);            
+          }
+    }
 }
 
 function drawMap(){
@@ -132,7 +147,7 @@ function drawRays(drawMinimap){
     let color = [0,0,0,1]
     ra=pa-dr*quality/2;
     if(ra<0){ra+=2*pi};if(ra>2*pi){ra -=2*pi};
-    if(drawMinimap==true) drawMap(), drawPlayer();
+    if(drawMinimap==true) drawMap();
     
     for(let r =0;r<quality;r++){
         //horizontal
@@ -267,15 +282,16 @@ function display(){
     drawSky()
     drawGround([254,206,233,1])
     drawRays(true)
+    drawPlayer()
 }
 function syncToServer(){
-    let data = {
+    player_data = {
         id,
         px,
         py,
         pa
     }
-    socket.send( JSON.stringify(data));
+    socket.send( JSON.stringify(player_data));
 }
 setInterval( 
     function () {
