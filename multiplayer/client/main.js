@@ -35,13 +35,25 @@ const id = Math.floor(Math.random() * 10000)
 let ready = false
 let player_data = {
     id,
-    px,
-    py,
-    pa
+    type : "data",
+    data : {
+        px,
+        py,
+        pa
+
+    }
 }
 let server_data = {
 }
-const socket = new WebSocket("ws:172.232.172.168:3000", "protocolOne")
+let test_ping = {
+    id,
+    type : "ping",
+    data : {
+        message : ""
+    }
+}
+
+const socket = new WebSocket("ws:localhost:3000", "protocolOne")
 
 socket.onopen = (event) => {
     socket.send( JSON.stringify(player_data));
@@ -49,9 +61,13 @@ socket.onopen = (event) => {
   };
   
 socket.onmessage = (event) => {
-    server_data = JSON.parse(event.data)
-    //console.log(obj);
-
+    if(JSON.parse(event.data).type == "data"){
+        server_data = JSON.parse(event.data)
+        document.getElementById("json").innerHTML = JSON.stringify(server_data,null,4);
+    }
+    else if (JSON.parse(event.data).type == "ping"){
+        console.log(Date.now() - JSON.parse(event.data).data.message)
+    }
 };
 document.addEventListener('keydown', function(event) {
     if(event.keyCode == 65) {
@@ -118,13 +134,12 @@ function drawPlayer(){
     
     obj = server_data
     for(var key in obj){
-        if (obj.hasOwnProperty(key)) {
-            var val = obj[key];
-            
-            ctx.fillStyle = ("rgba(255,0,0,1)")
-            ctx.fillRect((val.px*minimap_scale)-4,(val.py*minimap_scale)-4,8,8)
-            console.log((px-4)*minimap_scale);            
-          }
+        if(key != "type"){
+            if (obj.hasOwnProperty(key)) {
+                var val = obj[key];
+                ctx.fillStyle = ("rgba(255,0,0,1)")
+                ctx.fillRect((val.data.px*minimap_scale)-4,(val.data.py*minimap_scale)-4,8,8)
+          }}
     }
 }
 
@@ -285,11 +300,15 @@ function display(){
     drawPlayer()
 }
 function syncToServer(){
-    player_data = {
+    let player_data = {
         id,
-        px,
-        py,
-        pa
+        type : "data", 
+        data : {
+            px,
+            py,
+            pa
+    
+        }
     }
     socket.send( JSON.stringify(player_data));
 }
@@ -297,6 +316,13 @@ setInterval(
     function () {
         process_input()
         display()
-        syncToServer()
-
     }, 1000/165);
+//sync
+setInterval(function(){
+    syncToServer()
+},1000/20)
+//ping check
+setInterval(function(){
+    test_ping.data.message = Date.now()
+    socket.send( JSON.stringify(test_ping));
+},1000)
