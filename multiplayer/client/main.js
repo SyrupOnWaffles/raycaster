@@ -143,7 +143,6 @@ function drawSprite(image, x,y,z,scale){
     let dify = (y - py)
     let difx = (x - px)
     let angle = Math.atan(dify/difx)
-    //console.log(180*Math.atan2(pdy,pdx)/Math.PI)
     if(dot([pdx,pdy],[difx/dist,dify/dist] )>0){
         let drain = (1/dist*75)
         let gang = scale*drain
@@ -160,6 +159,7 @@ function drawPlayer(){
     //ctx.fillStyle = "rgba(255,0,0,1)";
     //ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
     obj = server_data
+    coords = []
     for(var key in obj){
         if(key != "type"){
             var val = obj[key];
@@ -167,10 +167,12 @@ function drawPlayer(){
                 if(val.id != id){
                     ctx.fillStyle = ("rgba(255,0,0,1)")
                     ctx.fillRect((val.data.px*minimap_scale)-4,(val.data.py*minimap_scale)-4,8,8);
+                    coords = [val.data.px,val.data.py]
                     console.log(degreesToRads(20))
                 };
           };
         };
+    drawSprite(man,coords[0],coords[1],-100,300)
     };
 }
 function drawMap(){
@@ -326,7 +328,7 @@ function display(){
     drawGround([254,206,233,1])
     drawRays(true)
     drawPlayer()
-    drawSprite(man,300,300,-100,300)
+    drawSprite(man,300,300,599,300)
 }
 function syncToServer(){
     let player_data = {
@@ -349,7 +351,7 @@ setInterval(
 //sync
 setInterval(function(){
     syncToServer()
-},1000/20)
+},1000/165)
 //ping check
 setInterval(function(){
     test_ping.data.message = Date.now()
