@@ -57,7 +57,7 @@ let test_ping = {
     }
 }
 
-const socket = new WebSocket("ws:localhost:3000", "protocolOne")
+const socket = new WebSocket("ws:172.232.172.168:3000", "protocolOne")
 
 socket.onopen = (event) => {
     socket.send( JSON.stringify(player_data));
