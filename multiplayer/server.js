@@ -21,7 +21,6 @@ server.on("connection", (socket) => {
     } catch (error) {
       console.log("prolly not json: " + error)
       console.log("bad message, ending connection")
-      socket.close()
     }
     if(parsed.id){
       if(parsed.type){
