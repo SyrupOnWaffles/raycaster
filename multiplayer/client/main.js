@@ -2,6 +2,10 @@ var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 const sky = new Image();
 sky.src = "sky.png"
+
+const man = new Image();
+man.src = "man.png"
+
 keys = {
     w: false,
     a: false,
@@ -69,6 +73,8 @@ socket.onmessage = (event) => {
         console.log("ping : " + (Date.now() - JSON.parse(event.data).data.message).toString())
     }
 };
+
+//input shit
 document.addEventListener('keydown', function(event) {
     if(event.keyCode == 65) {
         keys['a'] = true
@@ -95,10 +101,6 @@ document.addEventListener('keyup', function(event) {
         keys['s'] = false
     }
 });
-
-function distance(ax,ay,bx,by,angle){
-    return Math.sqrt((bx-ax)**2 + (by-ay)**2)
-}
 
 function process_input(){
     if(keys['a'] == true){
@@ -128,21 +130,49 @@ function process_input(){
     
 }
 
+//enginge shit
+
+//https://www.30secondsofcode.org/js/s/convert-degrees-radians/
+const degreesToRads = deg => (deg * Math.PI) / 180.0;
+  
+const dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+
+function drawSprite(image, x,y,z,scale){
+    ctx.fillStyle = "rgba(255,255,0,1)"
+    let dist = distance(x,y,px,py)
+    let dify = (y - py)
+    let difx = (x - px)
+    let angle = Math.atan(dify/difx)
+    //console.log(180*Math.atan2(pdy,pdx)/Math.PI)
+    if(dot([pdx,pdy],[difx/dist,dify/dist] )>0){
+        let drain = (1/dist*75)
+        let gang = scale*drain
+        ctx.drawImage(image ,(Math.tan(-pa + angle)*c.width) + (c.width/2) - gang/2, (c.height/2)+(-z*drain)- gang/2,gang,gang)
+    }
+
+}
+
+function distance(ax,ay,bx,by,angle){
+    return Math.sqrt((bx-ax)**2 + (by-ay)**2)
+}
+
 function drawPlayer(){
     //ctx.fillStyle = "rgba(255,0,0,1)";
     //ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
-    
     obj = server_data
     for(var key in obj){
         if(key != "type"){
+            var val = obj[key];
             if (obj.hasOwnProperty(key)) {
-                var val = obj[key];
-                ctx.fillStyle = ("rgba(255,0,0,1)")
-                ctx.fillRect((val.data.px*minimap_scale)-4,(val.data.py*minimap_scale)-4,8,8)
-          }}
-    }
+                if(val.id != id){
+                    ctx.fillStyle = ("rgba(255,0,0,1)")
+                    ctx.fillRect((val.data.px*minimap_scale)-4,(val.data.py*minimap_scale)-4,8,8);
+                    console.log(degreesToRads(20))
+                };
+          };
+        };
+    };
 }
-
 function drawMap(){
     ctx.fillStyle = "rgba(255,255,255,1)";
     ctx.fillRect(0,0, 512*minimap_scale, 512*minimap_scale);
@@ -154,7 +184,6 @@ function drawMap(){
         }
     }
 }
-
 function drawRays(drawMinimap){
 
     let r,mx,my,mp,dof;
@@ -275,7 +304,6 @@ function drawRays(drawMinimap){
     }
 
 }
-
 function drawSky(color){
     normal_pa = ((pa/(4*pi) - .5)*2)
     //ctx.fillStyle = "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + color[3] + ")"
@@ -298,6 +326,7 @@ function display(){
     drawGround([254,206,233,1])
     drawRays(true)
     drawPlayer()
+    drawSprite(man,300,300,-100,300)
 }
 function syncToServer(){
     let player_data = {
