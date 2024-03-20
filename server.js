@@ -2,7 +2,12 @@ const port = 3000
 const WebSocket = require("ws");
 
 const server = new WebSocket.Server({ port: port });
-
+server.on('error', function(error){
+  console.log(error)
+});
+server.on('open', function(error){
+  console.log("opened server at " + port.toString())
+})
 let active_players = 0
 let players_data = {
   type: "data",
@@ -10,7 +15,9 @@ let players_data = {
 
 console.log(active_players.toString() + " active players")
 
-server.on("connection", (socket) => {
+server.on("connection", (socket,req) => {
+  const ip = req.socket.remoteAddress;
+
   active_players += 1
   console.log(active_players.toString() + " active players")
   let id = null
@@ -27,7 +34,7 @@ server.on("connection", (socket) => {
           if(parsed.type == "data"){
               if(!id){
                 id = parsed.id
-                console.log("connected to client with id of " + id.toString())
+                console.log("connected to client with id of " + id.toString() + " with ip of " + ip.toString())
                 players_data[id] = parsed
                 socket.send(JSON.stringify(players_data));
               }

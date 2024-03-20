@@ -146,7 +146,7 @@ function drawSprite(image, x,y,z,scale){
     if(dot([pdx,pdy],[difx/dist,dify/dist] )>0){
         let drain = (1/dist*75)
         let gang = scale*drain
-        ctx.drawImage(image ,(Math.tan(-pa + angle)*c.width) + (c.width/2) - gang/2, (c.height/2)+(-z*drain)- gang/2,gang,gang)
+        ctx.drawImage(image ,(Math.tan(-(pa) + angle)*c.width) + (c.width/2) - gang/2, (c.height/2)+(-z*drain)- gang/2,gang,gang)
     }
 
 }
@@ -343,6 +343,7 @@ function syncToServer(){
     }
     socket.send( JSON.stringify(player_data));
 }
+//main
 setInterval( 
     function () {
         process_input()
@@ -351,7 +352,7 @@ setInterval(
 //sync
 setInterval(function(){
     syncToServer()
-},1000/165)
+},1000/20)
 //ping check
 setInterval(function(){
     test_ping.data.message = Date.now()
