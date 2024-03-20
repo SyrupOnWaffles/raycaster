@@ -12,17 +12,17 @@ keys = {
     s: false,
     d: false,
 }
-//math shit
+//math
 const pi = 3.14159
 const p2 = pi/2
 const p3 = 3*pi/2
 const dr = 0.0174533
 quality = 60
 minimap_scale = .25
-//player shit
+//player
 let px= 300,py= 300, pa = 2*pi, pspeed = 1, sensitivity = .01, pdx = Math.cos(pa) * pspeed,pdy=Math.sin(pa) * pspeed;
 
-//map shit
+//map
 const mapX = 8, mapY = 8, mapS = 64; 
 const map = [1,1,1,1,1,1,1,1,
              1,0,0,0,0,3,0,1,
@@ -34,7 +34,7 @@ const map = [1,1,1,1,1,1,1,1,
              1,1,1,1,1,1,1,1,]
 
 
-//multiplayer shit
+//multiplayer
 const id = Math.floor(Math.random() * 10000)
 let ready = false
 let player_data = {
@@ -74,7 +74,7 @@ socket.onmessage = (event) => {
     }
 };
 
-//input shit
+//input
 document.addEventListener('keydown', function(event) {
     if(event.keyCode == 65) {
         keys['a'] = true
@@ -130,7 +130,7 @@ function process_input(){
     
 }
 
-//enginge shit
+//enginge
 
 //https://www.30secondsofcode.org/js/s/convert-degrees-radians/
 const degreesToRads = deg => (deg * Math.PI) / 180.0;
