@@ -1,17 +1,19 @@
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
+
+//image definitions
 const sky = new Image();
-sky.src = "sky.png"
+sky.src = "resources/sky.png"
 
 const man = new Image();
-man.src = "man.png"
+man.src = "resources/man.png"
 
-keys = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-}
+const dake = new Image();
+dake.src = "resources/dake.jpeg"
+
+const ball = new Image();
+ball.src = "resources/ball.png"
+let ball_z =0
 //math
 const pi = 3.14159
 const p2 = pi/2
@@ -19,8 +21,9 @@ const p3 = 3*pi/2
 const dr = 0.0174533
 quality = 60
 minimap_scale = .25
+let yep = 10
 //player
-let px= 300,py= 300, pa = 2*pi, pspeed = 1, sensitivity = .01, pdx = Math.cos(pa) * pspeed,pdy=Math.sin(pa) * pspeed;
+let px= 320,py= 300, pa = 2*pi, pspeed = 1, sensitivity = .001, pdx = Math.cos(pa) * pspeed,pdy=Math.sin(pa) * pspeed;
 
 //map
 const mapX = 8, mapY = 8, mapS = 64; 
@@ -47,8 +50,13 @@ let player_data = {
 
     }
 }
-let server_data = {
+let raw_server_data = {
 }
+
+let interpolated_server_data = {
+    ball_z : 0,
+}
+
 let test_ping = {
     id,
     type : "ping",
@@ -57,7 +65,7 @@ let test_ping = {
     }
 }
 
-const socket = new WebSocket("ws:172.232.172.168:3000", "protocolOne")
+const socket = new WebSocket("ws:localhost:3000", "protocolOne")
 
 socket.onopen = (event) => {
     socket.send( JSON.stringify(player_data));
@@ -66,8 +74,8 @@ socket.onopen = (event) => {
   
 socket.onmessage = (event) => {
     if(JSON.parse(event.data).type == "data"){
-        server_data = JSON.parse(event.data)
-        document.getElementById("json").innerHTML = JSON.stringify(server_data,null,4);
+        raw_server_data = JSON.parse(event.data)
+        document.getElementById("json").innerHTML = JSON.stringify(raw_server_data,null,4);
     }
     else if (JSON.parse(event.data).type == "ping"){
         console.log("ping : " + (Date.now() - JSON.parse(event.data).data.message).toString())
@@ -75,6 +83,13 @@ socket.onmessage = (event) => {
 };
 
 //input
+keys = {
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+}
+
 document.addEventListener('keydown', function(event) {
     if(event.keyCode == 65) {
         keys['a'] = true
@@ -102,18 +117,40 @@ document.addEventListener('keyup', function(event) {
     }
 });
 
+
+
+let timer
+let movement = [0,0]
+c.addEventListener("mousemove", function (event) {
+    clearTimeout(timer)
+    movement[0] = event.movementX
+    movement[1] = event.movementY
+    timer = setTimeout(function (){
+        movement = [0,0]
+    }, 10)
+  });
+c.addEventListener("click", async () => {
+    await c.requestPointerLock();
+});
 function process_input(){
-    if(keys['a'] == true){
-        pa -= sensitivity
+    if(movement[0]){
+        pa -= sensitivity * -movement[0]
         if(pa>2*pi) pa-=2*pi;if(pa<2*pi) pa+=2*pi;
         pdx = Math.cos(pa)*pspeed;
         pdy=Math.sin(pa) * pspeed;
     }
+
+    if(keys['a'] == true){
+        px+=pdy;
+        py+=-pdx;
+    }
     if(keys['d'] == true){
-        pa += sensitivity
-        if(pa>2*pi) pa-=2*pi; if(pa<2*pi) pa+=2*pi;
-        pdx = Math.cos(pa)*pspeed;
-        pdy=Math.sin(pa) * pspeed;
+        // pa += sensitivity
+        // if(pa>2*pi) pa-=2*pi; if(pa<2*pi) pa+=2*pi;
+        // pdx = Math.cos(pa)*pspeed;
+        // pdy=Math.sin(pa) * pspeed;
+        px+=-pdy;
+        py+=pdx;
     }
 
 
@@ -133,10 +170,17 @@ function process_input(){
 //enginge
 
 //https://www.30secondsofcode.org/js/s/convert-degrees-radians/
+
+let sprite_queue = []
+
 const degreesToRads = deg => (deg * Math.PI) / 180.0;
   
 const dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
 
+function lerp(a, b, f)
+{
+    return a * (1.0 - f) + (b * f);
+}
 function drawSprite(image, x,y,z,scale){
     ctx.fillStyle = "rgba(255,255,0,1)"
     let dist = distance(x,y,px,py)
@@ -146,34 +190,51 @@ function drawSprite(image, x,y,z,scale){
     if(dot([pdx,pdy],[difx/dist,dify/dist] )>0){
         let drain = (1/dist*75)
         let gang = scale*drain
-        ctx.drawImage(image ,(Math.tan(-(pa) + angle)*c.width) + (c.width/2) - gang/2, (c.height/2)+(-z*drain)- gang/2,gang,gang)
+        let imageX = (Math.tan(-(pa) + angle)*c.width) + (c.width/2) - gang/2
+        let imageY = ((c.height/2)+(-z*drain) - gang/2)
+        ctx.drawImage(image ,imageX, imageY,gang,gang)
     }
 
 }
+function drawSpriteQueue(queue){
+    for(let i = 0; i<queue.length;i++){
+        queue[i][5] = distance(queue[i][1],queue[i][2],px,py)
+    }
 
+    queue = queue.sort((a, b) => a[5] - b[5]);
+    queue.reverse()
+    for (let j = 0; j < queue.length; j++) {
+        drawSprite(queue[j][0],queue[j][1],queue[j][2],queue[j][3],queue[j][4])
+    }
+}
 function distance(ax,ay,bx,by,angle){
     return Math.sqrt((bx-ax)**2 + (by-ay)**2)
 }
-
 function drawPlayer(){
     //ctx.fillStyle = "rgba(255,0,0,1)";
     //ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
-    obj = server_data
+    obj = interpolated_server_data
     coords = []
     for(var key in obj){
         if(key != "type"){
             var val = obj[key];
             if (obj.hasOwnProperty(key)) {
-                if(val.id != id){
-                    ctx.fillStyle = ("rgba(255,0,0,1)")
-                    ctx.fillRect((val.data.px*minimap_scale)-4,(val.data.py*minimap_scale)-4,8,8);
-                    coords = [val.data.px,val.data.py]
-                    console.log(degreesToRads(20))
-                };
+                //check if is player sync
+                if(!isNaN(key)){
+                    if(val.id != id){
+                        coords.push([val.data.px,val.data.py])
+                        sprite_queue.push([man,val.data.px,val.data.py,-150,375])
+                    }
+                }
+
           };
-        };
-    drawSprite(man,coords[0],coords[1],-100,300)
-    };
+        };    
+    };    
+}
+function drawBall(){
+    if(interpolated_server_data.ball){
+        sprite_queue.push([ball,400,300,interpolated_server_data.ball.data.ball_z,100])
+    }
 }
 function drawMap(){
     ctx.fillStyle = "rgba(255,255,255,1)";
@@ -327,8 +388,7 @@ function display(){
     drawSky()
     drawGround([254,206,233,1])
     drawRays(true)
-    drawPlayer()
-    drawSprite(man,300,300,599,300)
+    drawSpriteQueue(sprite_queue)
 }
 function syncToServer(){
     let player_data = {
@@ -338,23 +398,36 @@ function syncToServer(){
             px,
             py,
             pa
-    
         }
     }
     socket.send( JSON.stringify(player_data));
 }
-//main
-setInterval( 
-    function () {
-        process_input()
-        display()
-    }, 1000/165);
+
 //sync
 setInterval(function(){
     syncToServer()
 },1000/20)
+
+//sync interpolation
+setInterval(function () {
+    // if(raw_server_data.ball_z != null){
+        // interpolated_server_data.ball_z = lerp(interpolated_server_data.ball_z,raw_server_data.ball_z,.1)
+    // }
+    interpolated_server_data = raw_server_data
+},1000/165)
+
 //ping check
 setInterval(function(){
     test_ping.data.message = Date.now()
     socket.send( JSON.stringify(test_ping));
 },1000)
+
+//main
+setInterval( 
+    function () {
+        sprite_queue = []   
+        process_input()
+        drawPlayer()
+        drawBall()
+        display()
+    }, 1000/165);
