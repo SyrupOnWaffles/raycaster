@@ -8,6 +8,16 @@ sky.src = "resources/sky.png"
 const man = new Image();
 man.src = "resources/man.png"
 
+const man_left = new Image();
+man_left.src = "resources/manleft.png"
+
+const man_right = new Image();
+man_right.src = "resources/manright.png"
+
+const man_back = new Image();
+man_back.src = "resources/manback.png"
+
+
 const dake = new Image();
 dake.src = "resources/dake.jpeg"
 
@@ -214,7 +224,6 @@ function drawPlayer(){
     //ctx.fillStyle = "rgba(255,0,0,1)";
     //ctx.fillRect((px-4)*minimap_scale,(py-4)*minimap_scale,8*minimap_scale,8*minimap_scale);
     obj = interpolated_server_data
-    coords = []
     for(var key in obj){
         if(key != "type"){
             var val = obj[key];
@@ -222,8 +231,25 @@ function drawPlayer(){
                 //check if is player sync
                 if(!isNaN(key)){
                     if(val.id != id){
-                        coords.push([val.data.px,val.data.py])
-                        sprite_queue.push([man,val.data.px,val.data.py,-150,375])
+                        let opdx = Math.cos(val.data.pa) * pspeed;
+                        let opdy=Math.sin(val.data.pa) * pspeed;
+                        let dottington = dot([pdx,pdy],[opdx,opdy])
+                        let diffington = (pa - val.data.pa) * 57.2958
+                        console.log(diffington)
+                        if(dottington > .50){
+                            sprite_queue.push([man_back,val.data.px,val.data.py,-150,375])
+                        } 
+                        else if(dottington < -.50){
+                            sprite_queue.push([man,val.data.px,val.data.py,-150,375])
+                        }
+                        else if(dottington < .50 && dottington > -.50 ){
+                            if(diffington>180 && diffington<360){
+                                sprite_queue.push([man_right,val.data.px,val.data.py,-150,375])
+                            }
+                            else{
+                                sprite_queue.push([man_left,val.data.px,val.data.py,-150,375])
+                            }
+                        }
                     }
                 }
 
