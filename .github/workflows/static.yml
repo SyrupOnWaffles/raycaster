@@ -26,7 +26,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ "https://github.com/SyrupOnWaffles/raycaster/blob/main/client/index.html" }}
+      url: "https://github.com/SyrupOnWaffles/raycaster/blob/main/client/index.html"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
