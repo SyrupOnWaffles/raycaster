@@ -4,7 +4,7 @@
 	WORKDIR /app
 
 	# Install app dependencies
-	RUN npm install websocket
+	RUN npm install ws
 
 	# Bundle app source
 	COPY . .
