@@ -13,4 +13,4 @@
 	EXPOSE 8002
 
 	# Command to run the WebSocket server
-	CMD ["node", "main.js"]
+	CMD ["node", "server.js"]
