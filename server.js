@@ -1,4 +1,4 @@
-const port = 3000
+const port = 8002
 const WebSocket = require("ws");
 
 ball_z = 1000
