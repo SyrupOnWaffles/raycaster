@@ -75,7 +75,7 @@ let test_ping = {
     }
 }
 
-const socket = new WebSocket("ws://wco0ksk88gw8wcoswwc8c8kg.thegoodestdrawers.club", "protocolOne")
+const socket = new WebSocket("ws://raycastingbackend.mooo.com", "protocolOne")
 
 socket.onopen = (event) => {
     socket.send( JSON.stringify(player_data));
