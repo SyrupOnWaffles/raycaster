@@ -3,17 +3,14 @@
 	# Create app directory
 	WORKDIR /app
 
-	# Copy package.json and package-lock.json
-	COPY package*.json ./
-
 	# Install app dependencies
-	RUN npm install
+	RUN npm install websocket
 
 	# Bundle app source
 	COPY . .
 
 	# Expose the WebSocket port
-	EXPOSE 8080
+	EXPOSE 8002
 
 	# Command to run the WebSocket server
 	CMD ["node", "main.js"]
